@@ -44,6 +44,7 @@ Totals are accurate in aggregate when building outlines are available; individua
 
 | File | What it is |
 |---|---|
+| `METHODOLOGY.md` | The whole method explained step by step: data rules, every experiment and how it was tested, the decisions and why, limitations, likely questions |
 | `xBD_damage_to_carbon_cost.ipynb` | The full research notebook: data, baseline, every experiment, the carbon/cost pipeline, sensitivity analysis and the hold-out evaluation. Saved with its outputs. |
 | `prototype.ipynb` | Short notebook that runs the finished pipeline on one before/after image pair |
 | `xbd_pipeline.py` | The finished pipeline as a module (used by the prototype; Section 9d of the notebook checks it reproduces the notebook exactly) |

@@ -12,6 +12,7 @@ Creates:  ENGG2112_XBD_Model/          the repository contents (git repo lives h
 """
 import json
 import shutil
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -22,7 +23,7 @@ REPO = PROJECT.parent / "ENGG2112_XBD_Model"
 ASSETS = PROJECT.parent / "ENGG2112_release_assets"
 
 PUBLIC_FILES = [
-    "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "requirements.txt", ".gitignore",
+    "README.md", "METHODOLOGY.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "requirements.txt", ".gitignore",
     "xBD_damage_to_carbon_cost.ipynb", "prototype.ipynb", "xbd_pipeline.py",
     "colab_train.ipynb", "colab_train_multitask.ipynb",
     "tools/make_colab_notebook.py", "tools/build_ice_factors.py", "tools/export_public_repo.py",
@@ -63,7 +64,7 @@ def forbidden_strings():
     return full | paths, {s for s in short if len(s) >= 4}
 
 
-def scan(path, anywhere, in_text):
+def scan(path, anywhere, in_text, root):
     """Problems in one file. For notebooks, cell sources and markdown get the stricter check."""
     problems = []
     if path.suffix == ".ipynb":
@@ -77,27 +78,33 @@ def scan(path, anywhere, in_text):
         text = path.read_text(errors="ignore")
         strict = path.suffix in {".py", ".md", ".txt"}
         problems += [repr(s) for s in (anywhere | in_text if strict else anywhere) if s in text]
-    return [f"{path.relative_to(REPO)}: contains {p}" for p in problems]
+    return [f"{path.relative_to(root)}: contains {p}" for p in problems]
 
 
 def main():
-    if REPO.exists():
-        for item in REPO.iterdir():          # refresh the contents but keep the git history
-            if item.name != ".git":
-                shutil.rmtree(item) if item.is_dir() else item.unlink()
-    REPO.mkdir(exist_ok=True)
+    # Build and scan in a temporary folder first; the repository folder is only touched if the scan passes.
+    stage = Path(tempfile.mkdtemp(prefix="public_repo_"))
     for name in PUBLIC_FILES:
-        src, dst = PROJECT / name, REPO / name
+        src, dst = PROJECT / name, stage / name
         dst.parent.mkdir(parents=True, exist_ok=True)
         clean_notebook(src, dst) if name.endswith(".ipynb") else shutil.copy2(src, dst)
 
     anywhere, in_text = forbidden_strings()
     problems = []
-    for path in REPO.rglob("*"):
-        if path.is_file() and ".git" not in path.parts and path.suffix in {".ipynb", ".py", ".md", ".csv", ".txt"}:
-            problems += scan(path, anywhere, in_text)
+    for path in stage.rglob("*"):
+        if path.is_file() and path.suffix in {".ipynb", ".py", ".md", ".csv", ".txt"}:
+            problems += scan(path, anywhere, in_text, stage)
     if problems:
-        raise SystemExit("NOT SAFE TO PUBLISH:\n  " + "\n  ".join(problems))
+        shutil.rmtree(stage)
+        raise SystemExit("NOT SAFE TO PUBLISH (repository folder left unchanged):\n  " + "\n  ".join(problems))
+
+    REPO.mkdir(exist_ok=True)
+    for item in REPO.iterdir():                  # replace the contents but keep the git history
+        if item.name != ".git":
+            shutil.rmtree(item) if item.is_dir() else item.unlink()
+    for item in stage.iterdir():
+        shutil.move(str(item), REPO / item.name)
+    shutil.rmtree(stage)
 
     ASSETS.mkdir(exist_ok=True)
     out = PROJECT / "outputs"
