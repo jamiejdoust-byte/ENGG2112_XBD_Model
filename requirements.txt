@@ -1,0 +1,15 @@
+# Tested with Python 3.9.6 (macOS, CPU) for the notebook and prototype; training ran on Google Colab (GPU).
+tensorflow==2.20.0
+keras==3.10.0
+numpy==2.0.2
+pandas==2.3.3
+scipy==1.13.1
+scikit-learn==1.6.1
+matplotlib==3.9.4
+pillow==11.3.0
+shapely==2.0.7
+h5py==3.14.0
+openpyxl==3.1.5
+psutil==7.2.2
+nbconvert==7.17.1
+ipykernel==6.31.0

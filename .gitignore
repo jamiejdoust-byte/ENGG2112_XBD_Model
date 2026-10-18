@@ -1,0 +1,16 @@
+# data, models and caches are not part of the repository (see README)
+xBD/
+archives/
+weights/
+outputs/
+notebook_backups/
+xView2_baseline/
+reference_data/ice_raw/
+reference_data/rasmi_raw/
+reference_data/gem_raw/
+reference_data/ice_carbon_factors.csv
+*.zip
+*.tar
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
